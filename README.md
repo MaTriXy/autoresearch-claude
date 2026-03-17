@@ -114,10 +114,32 @@ Before looping, Claude performs a one-time setup:
 
 ### 1. Install
 
-```bash
-claude plugin marketplace add uditgoenka/autoresearch
-claude plugin install autoresearch@autoresearch
+**Option A — Plugin install (recommended):**
+
+In Claude Code, run:
 ```
+/plugin marketplace add uditgoenka/autoresearch
+/plugin install autoresearch@autoresearch
+```
+
+That's it. All 6 commands are available after running `/reload-plugins` or restarting Claude Code.
+
+**Option B — Manual copy:**
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+
+# Copy skill + subcommands to your project
+cp -r autoresearch/skills/autoresearch .claude/skills/autoresearch
+cp -r autoresearch/commands/autoresearch .claude/commands/autoresearch
+```
+
+Or install globally:
+```bash
+cp -r autoresearch/skills/autoresearch ~/.claude/skills/autoresearch
+cp -r autoresearch/commands/autoresearch ~/.claude/commands/autoresearch
+```
+
+> **Note:** The `commands/` directory is required for subcommands (`/autoresearch:ship`, `/autoresearch:plan`, `/autoresearch:security`) to work.
 
 ### 2. Run It
 
