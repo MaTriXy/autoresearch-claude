@@ -1,13 +1,14 @@
 <div align="center">
 
-# Claude Autoresearch
+# Autoresearch
 
-**Turn [Claude Code](https://docs.anthropic.com/en/docs/claude-code) into a relentless improvement engine.**
+**Turn [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [OpenCode](https://opencode.ai) into a relentless improvement engine.**
 
 Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — constraint + mechanical metric + autonomous iteration = compounding gains.
 
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blue?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
+[![OpenCode](https://img.shields.io/badge/OpenCode-Skill-purple)](https://opencode.ai)
+[![Version](https://img.shields.io/badge/version-2.0.0--beta.0.1-blue.svg)](https://github.com/uditgoenka/autoresearch/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 [![Based on](https://img.shields.io/badge/Based_on-Karpathy's_Autoresearch-orange)](https://github.com/karpathy/autoresearch)
@@ -16,9 +17,11 @@ Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) —
 
 <br>
 
-*"Set the GOAL → Claude runs the LOOP → You wake up to results"*
+*"Set the GOAL → The agent runs the LOOP → You wake up to results"*
 
 *You don't need AGI. You need a goal, a metric, and a loop that never quits.*
+
+**Now supports both Claude Code and OpenCode.**
 
 <br>
 
@@ -116,7 +119,9 @@ Before looping, Claude performs a one-time setup:
 | `/autoresearch:reason` | Adversarial refinement — blind judge panel converges subjective content through isolated multi-agent debate |
 | `Guard: <command>` | Optional safety net — must pass for changes to be kept |
 
-**All commands use `AskUserQuestion` for interactive setup when invoked without arguments.** Just type the command — Claude will ask you what you need step by step with smart defaults based on your codebase. Power users can skip the wizard by providing flags inline.
+**All commands use interactive setup when invoked without arguments.** Just type the command — the agent will ask you what you need step by step with smart defaults based on your codebase. Power users can skip the wizard by providing flags inline.
+
+> **OpenCode users:** Commands use underscore naming (`/autoresearch_debug`, `/autoresearch_fix`, etc.) instead of colons. See [OpenCode Quick Start](#opencode-quick-start) below.
 
 ### Quick Decision Guide
 
@@ -147,7 +152,7 @@ Before looping, Claude performs a one-time setup:
 
 ## Quick Start
 
-### 1. Install
+### Claude Code
 
 **Option A — Plugin install (recommended):**
 
@@ -186,6 +191,41 @@ cp autoresearch/claude-plugin/commands/autoresearch.md ~/.claude/commands/autore
 ```
 
 > **Note:** The `commands/` directory is required for subcommands (`/autoresearch:ship`, `/autoresearch:plan`, `/autoresearch:security`) to work.
+
+**Option C — Guided installer:**
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+cd autoresearch
+./scripts/install.sh --claude --global
+```
+
+### OpenCode Quick Start
+
+**Option A — Guided installer (recommended):**
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+cd autoresearch
+./scripts/install.sh --opencode --global
+```
+
+**Option B — Manual copy:**
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+
+# Copy to your project
+cp -r autoresearch/.opencode/skills/autoresearch .opencode/skills/autoresearch
+cp autoresearch/.opencode/commands/autoresearch*.md .opencode/commands/
+cp autoresearch/.opencode/agents/docs-manager.md .opencode/agents/docs-manager.md
+```
+
+Or install globally:
+```bash
+cp -r autoresearch/.opencode/skills/autoresearch ~/.config/opencode/skills/autoresearch
+cp autoresearch/.opencode/commands/autoresearch*.md ~/.config/opencode/commands/
+cp autoresearch/.opencode/agents/docs-manager.md ~/.config/opencode/agents/docs-manager.md
+```
+
+> **OpenCode command names:** Use underscores instead of colons — `/autoresearch_debug`, `/autoresearch_fix`, `/autoresearch_plan`, etc. All 10 commands are available.
 
 ### 2. Run It
 
@@ -445,68 +485,23 @@ autoresearch/
 ├── README.md
 ├── COMPARISON.md                                  ← Karpathy's Autoresearch vs Claude Autoresearch
 ├── guide/                                         ← Comprehensive guides — one per command + advanced patterns
-│   ├── README.md                                  ← Guide index
-│   ├── getting-started.md                         ← Installation, core concepts, FAQ
-│   ├── autoresearch.md                            ← The autonomous loop
-│   ├── autoresearch-plan.md                       ← Setup wizard
-│   ├── autoresearch-debug.md                      ← Bug hunter
-│   ├── autoresearch-fix.md                        ← Error crusher
-│   ├── autoresearch-security.md                   ← Security auditor
-│   ├── autoresearch-ship.md                       ← Shipping workflow
-│   ├── autoresearch-scenario.md                   ← Scenario explorer
-│   ├── autoresearch-predict.md                    ← Multi-persona swarm prediction
-│   ├── autoresearch-learn.md                      ← Documentation engine
-│   ├── autoresearch-reason.md                     ← Adversarial refinement
-│   ├── chains-and-combinations.md                 ← Multi-command pipelines
-│   ├── examples-by-domain.md                      ← Real-world examples by domain
-│   ├── advanced-patterns.md                       ← Guards, MCP, CI/CD, FAQ
-│   └── scenario/                                  ← 10 real-world scenario walkthroughs
-│       ├── README.md                              ← Scenario guide index
-│       ├── real-time-chat-messaging.md
-│       ├── multi-tenant-saas-onboarding.md
-│       ├── cicd-pipeline-deployment.md
-│       ├── healthcare-appointment-scheduling.md
-│       ├── social-media-content-moderation.md
-│       ├── iot-firmware-updates.md
-│       ├── document-collaboration.md
-│       ├── cross-border-wire-transfers.md
-│       ├── search-autocomplete.md
-│       ├── mobile-push-notifications.md
-│       └── adversarial-architecture-decisions.md
-├── LICENSE
-├── .claude-plugin/
-│   └── marketplace.json                           ← Plugin marketplace manifest (source: ./claude-plugin)
-├── claude-plugin/                                 ← Distribution package (what users install)
-│   ├── .claude-plugin/
-│   │   └── plugin.json                            ← Plugin metadata + version
-│   ├── commands/
-│   │   ├── autoresearch.md                        ← Main /autoresearch command
-│   │   └── autoresearch/
-│   │       ├── ship.md                            ← /autoresearch:ship registration
-│   │       ├── plan.md                            ← /autoresearch:plan registration
-│   │       ├── security.md                        ← /autoresearch:security registration
-│   │       ├── debug.md                           ← /autoresearch:debug registration
-│   │       ├── fix.md                             ← /autoresearch:fix registration
-│   │       ├── scenario.md                        ← /autoresearch:scenario registration
-│   │       ├── predict.md                         ← /autoresearch:predict registration
-│   │       ├── learn.md                           ← /autoresearch:learn registration
-│   │       └── reason.md                          ← /autoresearch:reason registration
-│   └── skills/
-│       └── autoresearch/
-│           ├── SKILL.md                           ← Main skill (loaded by Claude Code)
-│           └── references/
-│               ├── autonomous-loop-protocol.md    ← 8-phase loop protocol
-│               ├── core-principles.md             ← 7 universal principles
-│               ├── plan-workflow.md               ← Plan wizard protocol
-│               ├── security-workflow.md           ← Security audit protocol
-│               ├── ship-workflow.md               ← Ship workflow protocol
-│               ├── debug-workflow.md              ← Debug loop protocol
-│               ├── fix-workflow.md                ← Fix loop protocol
-│               ├── scenario-workflow.md           ← Scenario exploration protocol
-│               ├── predict-workflow.md            ← Multi-persona swarm prediction workflow
-│               ├── learn-workflow.md              ← Documentation engine protocol
-│               ├── reason-workflow.md             ← Adversarial refinement protocol
-│               └── results-logging.md             ← TSV tracking format
+├── scripts/
+│   ├── install.sh                                 ← Guided installer (Claude Code + OpenCode)
+│   ├── sync-opencode.sh                           ← Sync .claude/ → .opencode/ with adaptations
+│   ├── release.sh                                 ← Release automation
+│   └── release.md                                 ← Release checklist
+├── .claude/skills/autoresearch/                   ← Claude Code source (canonical)
+│   ├── SKILL.md                                   ← Main skill
+│   └── references/                                ← 12 workflow protocol files
+├── .opencode/                                     ← OpenCode port (generated via sync-opencode.sh)
+│   ├── skills/autoresearch/                       ← Adapted SKILL.md + references
+│   ├── commands/                                  ← 10 command files (autoresearch_*.md)
+│   └── agents/docs-manager.md                     ← Subagent for learn workflow
+├── claude-plugin/                                 ← Distribution package (Claude Code plugin install)
+│   ├── .claude-plugin/plugin.json                 ← Plugin metadata + version
+│   ├── commands/                                  ← Command registrations
+│   └── skills/autoresearch/                       ← Skill + references
+└── LICENSE
 ```
 
 ---
@@ -517,7 +512,10 @@ autoresearch/
 A: Run `/autoresearch:plan` — it analyzes your codebase, suggests metrics, and dry-runs the verify command before you launch.
 
 **Q: Does this work with any project?**
-A: Yes. Any language, framework, or domain. Install via `/plugin marketplace add uditgoenka/autoresearch` or manually copy from the `claude-plugin/` directory.
+A: Yes. Any language, framework, or domain. Install via `/plugin marketplace add uditgoenka/autoresearch` (Claude Code), `./scripts/install.sh --opencode --global` (OpenCode), or manually copy from the `claude-plugin/` or `.opencode/` directories.
+
+**Q: Does this work with OpenCode?**
+A: Yes, as of v2.0.0-beta. Run `./scripts/install.sh --opencode --global` or manually copy `.opencode/` files. Commands use underscore naming (`/autoresearch_debug` instead of `/autoresearch:debug`).
 
 **Q: How do I stop the loop?**
 A: `Ctrl+C` or add `Iterations: N` to your inline config to run exactly N iterations. Claude commits before verifying, so your last successful state is always in git.
@@ -566,6 +564,7 @@ MIT — see [LICENSE](LICENSE).
 
 - **[Andrej Karpathy](https://github.com/karpathy)** — for [autoresearch](https://github.com/karpathy/autoresearch)
 - **[Anthropic](https://anthropic.com)** — for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and the skills system
+- **[OpenCode](https://opencode.ai)** — for the OpenCode terminal agent
 
 ---
 

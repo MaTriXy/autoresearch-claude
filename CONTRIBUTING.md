@@ -4,17 +4,16 @@ Thanks for wanting to make autoresearch better. Whether you're fixing a typo, ad
 
 ## Quick Start
 
-Autoresearch is Markdown files that Claude Code discovers from `skills/` and `commands/` directories. No build step, no compilation — edit a `.md` file, invoke the skill, see your changes.
+Autoresearch is Markdown files that Claude Code and OpenCode discover from `skills/` and `commands/` directories. No build step, no compilation — edit a `.md` file, invoke the skill, see your changes.
 
 ```bash
 # 1. Clone the repo
 git clone https://github.com/uditgoenka/autoresearch.git
 cd autoresearch
 
-# 2. Copy to your local Claude Code (for testing)
-cp -r claude-plugin/skills/autoresearch ~/.claude/skills/autoresearch
-cp -r claude-plugin/commands/autoresearch ~/.claude/commands/autoresearch
-cp claude-plugin/commands/autoresearch.md ~/.claude/commands/autoresearch.md
+# 2. Install via guided installer
+./scripts/install.sh --claude --global   # for Claude Code
+./scripts/install.sh --opencode --global # for OpenCode
 
 # 3. Or symlink for live editing (recommended for development)
 ln -s $(pwd)/claude-plugin/skills/autoresearch ~/.claude/skills/autoresearch
@@ -22,13 +21,22 @@ ln -s $(pwd)/claude-plugin/commands/autoresearch ~/.claude/commands/autoresearch
 ln -s $(pwd)/claude-plugin/commands/autoresearch.md ~/.claude/commands/autoresearch.md
 ```
 
-When done developing, replace symlinks with stable copies:
+When done developing, replace symlinks with stable copies using the installer:
 ```bash
 rm ~/.claude/skills/autoresearch ~/.claude/commands/autoresearch ~/.claude/commands/autoresearch.md
-cp -r claude-plugin/skills/autoresearch ~/.claude/skills/autoresearch
-cp -r claude-plugin/commands/autoresearch ~/.claude/commands/autoresearch
-cp claude-plugin/commands/autoresearch.md ~/.claude/commands/autoresearch.md
+./scripts/install.sh --claude --global --force
 ```
+
+### OpenCode Development
+
+The canonical source for all skill files is `.claude/skills/autoresearch/`. After making changes:
+
+```bash
+# Sync changes to .opencode/ with OpenCode adaptations
+./scripts/sync-opencode.sh
+```
+
+This applies tool name changes (`AskUserQuestion` → `question`), command syntax (`/autoresearch:X` → `/autoresearch_X`), and frontmatter adaptations automatically.
 
 ## Repository Structure
 
@@ -37,39 +45,23 @@ autoresearch/
 ├── README.md                                      ← Project overview + quick start
 ├── .gitignore                                     ← Excludes local .claude/ state
 ├── .claude-plugin/
-│   └── marketplace.json                           ← Plugin marketplace manifest (source: ./claude-plugin)
-├── claude-plugin/                                 ← DISTRIBUTION — what users install
-│   ├── .claude-plugin/
-│   │   └── plugin.json                            ← Plugin metadata + version
-│   ├── commands/
-│   │   ├── autoresearch.md                        ← Main /autoresearch command
-│   │   └── autoresearch/
-│   │       ├── plan.md                            ← /autoresearch:plan registration
-│   │       ├── security.md                        ← /autoresearch:security registration
-│   │       ├── ship.md                            ← /autoresearch:ship registration
-│   │       ├── debug.md                           ← /autoresearch:debug registration
-│   │       ├── fix.md                             ← /autoresearch:fix registration
-│   │       ├── scenario.md                        ← /autoresearch:scenario registration
-│   │       ├── predict.md                         ← /autoresearch:predict registration
-│   │       └── learn.md                           ← /autoresearch:learn registration
-│   └── skills/
-│       └── autoresearch/
-│           ├── SKILL.md                           ← Main skill (loaded by Claude Code)
-│           └── references/
-│               ├── autonomous-loop-protocol.md    ← 8-phase loop protocol
-│               ├── core-principles.md             ← 7 universal principles
-│               ├── plan-workflow.md               ← Plan wizard protocol
-│               ├── security-workflow.md           ← Security audit protocol
-│               ├── ship-workflow.md               ← Ship workflow protocol
-│               ├── debug-workflow.md              ← Debug loop protocol
-│               ├── fix-workflow.md                ← Fix loop protocol
-│               ├── scenario-workflow.md           ← Scenario exploration protocol
-│               ├── predict-workflow.md            ← Multi-persona swarm prediction workflow
-│               ├── learn-workflow.md              ← Learn/documentation engine protocol
-│               └── results-logging.md             ← TSV tracking format
-├── .claude/                                       ← LOCAL development (gitignored except autoresearch)
-│   ├── commands/autoresearch/                     ← Dev copies of commands
-│   └── skills/autoresearch/                       ← Dev copies of skills
+│   └── marketplace.json                           ← Plugin marketplace manifest
+├── claude-plugin/                                 ← DISTRIBUTION — what Claude Code plugin users install
+│   ├── .claude-plugin/plugin.json                 ← Plugin metadata + version
+│   ├── commands/                                  ← Command registrations
+│   └── skills/autoresearch/                       ← Skill + 12 reference files
+├── .claude/skills/autoresearch/                   ← CANONICAL SOURCE — edit here first
+│   ├── SKILL.md                                   ← Main skill
+│   └── references/                                ← 12 workflow protocol files
+├── .opencode/                                     ← OPENCODE PORT — generated via sync-opencode.sh
+│   ├── skills/autoresearch/                       ← Adapted SKILL.md + references
+│   ├── commands/autoresearch*.md                  ← 10 command files
+│   └── agents/docs-manager.md                     ← Subagent for learn workflow
+├── scripts/
+│   ├── install.sh                                 ← Guided installer (Claude Code + OpenCode)
+│   ├── sync-opencode.sh                           ← Sync .claude/ → .opencode/
+│   ├── release.sh                                 ← Release automation
+│   └── release.md                                 ← Release checklist
 ├── guide/                                         ← Comprehensive guides — one per command
 │   ├── README.md                                  ← Guide index
 │   ├── getting-started.md                         ← Installation, core concepts, FAQ

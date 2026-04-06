@@ -2,7 +2,7 @@
 
 **By [Udit Goenka](https://udit.co)**
 
-Autoresearch turns [Claude Code](https://docs.anthropic.com/en/docs/claude-code) into an autonomous improvement engine. Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch), it follows one simple idea:
+Autoresearch turns [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [OpenCode](https://opencode.ai) into an autonomous improvement engine. Based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch), it follows one simple idea:
 
 **Set a goal. Define a metric. Let Claude loop until it's done.**
 
@@ -63,6 +63,31 @@ cp autoresearch/claude-plugin/commands/autoresearch.md ~/.claude/commands/autore
 ```
 
 > **Important:** The `commands/` directory is required for subcommands (`/autoresearch:plan`, `/autoresearch:ship`, etc.) to work.
+
+### Option D — Guided Installer
+
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+cd autoresearch
+./scripts/install.sh  # interactive — choose Claude Code or OpenCode, global or local
+```
+
+### OpenCode Installation
+
+```bash
+git clone https://github.com/uditgoenka/autoresearch.git
+cd autoresearch
+./scripts/install.sh --opencode --global
+```
+
+Or manually:
+```bash
+cp -r autoresearch/.opencode/skills/autoresearch ~/.config/opencode/skills/autoresearch
+cp autoresearch/.opencode/commands/autoresearch*.md ~/.config/opencode/commands/
+cp autoresearch/.opencode/agents/docs-manager.md ~/.config/opencode/agents/docs-manager.md
+```
+
+> **OpenCode commands use underscores:** `/autoresearch_debug`, `/autoresearch_fix`, `/autoresearch_plan`, etc.
 
 ### Verify Installation
 
