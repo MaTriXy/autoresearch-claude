@@ -345,6 +345,21 @@ LOOP:
 | Oversized file | Split into focused sub-docs or trim redundant sections |
 | Missing required section | Generate section from scout context |
 
+### Progressive Retry Strategy (MANDATORY)
+
+Each retry MUST use a materially different approach. Identical re-prompting wastes tokens and produces identical failures.
+
+| Attempt | Strategy | docs-manager Instruction |
+|---------|----------|--------------------------|
+| 1 | **Targeted fix** | "Fix ONLY the flagged issues below. Do not rewrite entire documents." (original feedback) |
+| 2 | **Different approach** | "Previous fix attempt failed on these issues: {list failed items with prior attempt output as anti-pattern}. Try a DIFFERENT approach — consider broader rewrites of affected sections. Do NOT repeat the approach from attempt 1." + accumulated feedback from both validation runs |
+| 3 | **Simplify and reduce scope** | "Two fix attempts failed on these issues: {list}. SIMPLIFY: remove problematic references/links rather than trying to fix them. Prefer omission over incorrect content. Reduce section depth/scope if needed to achieve validity." + all prior feedback |
+
+**Anti-pattern:** Re-spawning docs-manager with identical instructions across retries. Each attempt MUST include:
+1. Accumulated feedback from ALL prior validation runs (not just the latest)
+2. Explicit instruction to avoid prior failed approaches
+3. Escalating permission to make broader changes (attempt 1: surgical, attempt 2: broader rewrites, attempt 3: simplify/remove)
+
 Output: `✓ Phase 6: Fixed — [N] issues resolved in [M] iterations` or `⚠ Phase 6: [N] warnings remaining after 3 attempts`
 
 ## Phase 7: Finalize — Inventory + Summary

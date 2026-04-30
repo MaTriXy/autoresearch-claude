@@ -496,16 +496,24 @@ Each iteration should build on prior findings:
 - Findings compound. Each iteration reads past findings for chaining opportunities.
 
 ### Dynamic Analysis Verification
-Where possible, suggest or construct verification commands:
+
+**Scope Validation (MANDATORY):** All audit activity MUST target only files and URLs within the project directory. Before generating or executing any verification command:
+
+1. **File scope:** Only analyze files matching the `--scope` glob or within the project root. Never read or modify files outside the project boundary.
+2. **Network scope:** Any curl/fetch/HTTP commands in verification templates MUST target `localhost`, `127.0.0.1`, or a host explicitly approved by the user during setup. NEVER target external URLs found in source code (third-party APIs, production endpoints, SaaS services) unless the user explicitly confirms ownership.
+3. **Template mode:** Dynamic verification commands are OUTPUT AS TEMPLATES for the user to review and run manually. Do NOT execute HTTP requests against any host autonomously unless the host was explicitly approved during setup via `--target-host <host>`.
+4. **Approval gate:** If the audit discovers URLs pointing to external services (e.g., `https://api.stripe.com`, `https://auth0.com`), flag them in the report as "external dependency — requires user authorization to test" and do NOT generate runnable commands against them.
+
+Where possible, suggest or construct verification command TEMPLATES (user fills in target):
 ```bash
-# Test for missing rate limiting
-for i in {1..100}; do curl -s -o /dev/null -w "%{http_code}" https://app/api/login; done
+# Test for missing rate limiting (replace TARGET with your approved host)
+for i in {1..100}; do curl -s -o /dev/null -w "%{http_code}" http://localhost:PORT/api/login; done
 
-# Test for IDOR
-curl -H "Authorization: Bearer USER_A_TOKEN" https://app/api/users/USER_B_ID
+# Test for IDOR (replace TARGET with your approved host)
+curl -H "Authorization: Bearer USER_A_TOKEN" http://localhost:PORT/api/users/USER_B_ID
 
-# Test for XSS
-curl https://app/search?q=%3Cscript%3Ealert(1)%3C/script%3E
+# Test for XSS (replace TARGET with your approved host)
+curl http://localhost:PORT/search?q=%3Cscript%3Ealert(1)%3C/script%3E
 ```
 
 ### Comprehensive Vulnerability Categories (from Strix)
@@ -944,7 +952,7 @@ Source: security/{slug}/findings.md
 - **Do NOT report theoretical risks without code evidence** — every finding needs a file:line reference
 - **Do NOT skip categories** — the loop should aim for 100% OWASP + STRIDE coverage
 - **Do NOT auto-fix vulnerabilities** — report only, user decides what to fix
-- **Do NOT test against live production** — analyze code statically, suggest dynamic tests
+- **Do NOT execute HTTP requests against any host unless explicitly approved by the user during setup** — analyze code statically, output dynamic tests as templates for the user to run. Use `--target-host` for approved hosts. Default to `localhost` in all examples
 - **Do NOT report the same finding twice** — check results log for duplicates before logging
 - **Do NOT prioritize quantity over quality** — 5 confirmed critical > 50 theoretical lows
 

@@ -373,6 +373,23 @@ Status: SHIPPED ✓
 | `--checklist-only` | Only generate and evaluate checklist (stop at Phase 3) |
 | `--chain <targets>` | Chain to downstream tool(s) after completion. Comma-separated for multi-chain. Spaces after commas tolerated. | `--chain debug` or `--chain scenario,debug,fix` |
 
+### Flag Safety Rules
+
+**`--force` + `--auto` combination is REJECTED.** If both flags are provided simultaneously, exit with error:
+
+```
+ERROR: --force and --auto cannot be used together.
+  --force skips non-critical checklist items.
+  --auto auto-approves the dry-run gate.
+  Combined, they create a zero-review deploy path that bypasses safety gates.
+
+Use --force alone (requires manual dry-run approval) or --auto alone (requires full checklist pass).
+```
+
+**Rationale:** `--force` requires manual confirmation at the dry-run gate as a compensating control for skipped checklist items. `--auto` requires a clean checklist as a compensating control for skipping human review. Neither compensating control exists when both flags are combined.
+
+**Additional blocker classification:** Test failures (`npm test` / `pytest` / language-specific) are always classified as **Blockers** (Priority 1), never as "Required" or "Recommended." The `--force` flag cannot skip test failures regardless of any other flag combination.
+
 ## Composite Metric
 
 For bounded loop mode, the ship readiness metric:
