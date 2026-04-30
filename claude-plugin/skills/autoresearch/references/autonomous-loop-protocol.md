@@ -50,6 +50,38 @@ GUARD_BASELINE=$(<guard command>)
 # Record alongside the primary metric baseline in iteration 0
 ```
 
+### Session Isolation (Concurrency Lock)
+
+Before entering the loop, check for an existing autoresearch session on this branch:
+
+```bash
+# 7. Check for concurrent autoresearch session
+LOCK_FILE=".git/autoresearch.lock"
+if [ -f "$LOCK_FILE" ]; then
+  LOCK_PID=$(head -1 "$LOCK_FILE")
+  LOCK_BRANCH=$(sed -n '2p' "$LOCK_FILE")
+  LOCK_TIME=$(sed -n '3p' "$LOCK_FILE")
+  # Check if the locking process is still running
+  if kill -0 "$LOCK_PID" 2>/dev/null; then
+    echo "FAIL: Another autoresearch session (PID $LOCK_PID) is active on branch '$LOCK_BRANCH' since $LOCK_TIME"
+    echo "→ Wait for it to finish, or kill PID $LOCK_PID if it's stale, then remove $LOCK_FILE"
+    # ABORT — do not proceed
+  else
+    echo "WARN: Stale lock from dead process (PID $LOCK_PID) — removing $LOCK_FILE"
+    rm -f "$LOCK_FILE"
+  fi
+fi
+
+# Create lock file with PID, branch, and timestamp
+echo "$$" > "$LOCK_FILE"
+git symbolic-ref --short HEAD 2>/dev/null >> "$LOCK_FILE"
+date -u '+%Y-%m-%dT%H:%M:%SZ' >> "$LOCK_FILE"
+```
+
+**Lock cleanup:** Remove `$LOCK_FILE` on clean exit (after final summary), on user interrupt (`Ctrl+C`), and during crash recovery (Phase 0 detects stale lock with dead PID). Always clean up before returning control to the user.
+
+**Branch isolation:** The lock file records the branch name. Concurrent sessions on DIFFERENT branches are allowed (each branch gets its own experiment history). Only same-branch concurrency is blocked.
+
 **If any FAIL:** Stop and inform user. Do not enter the loop with broken preconditions.
 **If any WARN:** Log the warning, proceed with caution, inform user.
 

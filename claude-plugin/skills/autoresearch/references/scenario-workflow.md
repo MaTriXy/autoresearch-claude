@@ -93,6 +93,46 @@ When the user provides arguments inline, parse them in this order (flags take pr
 - If user answers only some questions and stops responding → treat answered questions as config, ask remaining questions in a follow-up call
 - If Ctrl+C during setup → no state persisted, clean restart on re-invocation
 
+## Crash Recovery & Incremental Persistence
+
+**Write scenario-results.tsv incrementally** — append after EACH completed iteration, not as a batch at the end. This ensures work survives crashes.
+
+**On restart or re-invocation**, check for existing exploration state:
+
+```
+FUNCTION checkForResumableState(slug):
+  tsv_path = "scenario/{slug}/scenario-results.tsv"
+
+  IF file_exists(tsv_path):
+    last_iteration = parse_last_row(tsv_path).iteration
+    total_rows = count_data_rows(tsv_path)  # exclude header
+    dimensions_covered = unique_values(tsv_path, column="dimension")
+
+    PRINT "Found existing exploration: {total_rows} iterations completed (last: #{last_iteration})"
+    PRINT "Dimensions covered: {dimensions_covered}"
+
+    AskUserQuestion:
+      question: "Previous exploration state found. Resume or start fresh?"
+      header: "Resume Available"
+      options:
+        - label: "Resume from iteration #{last_iteration + 1}"
+          description: "Continue where it left off — {total_rows} iterations preserved"
+        - label: "Start fresh"
+          description: "Delete existing results and begin from scratch"
+
+    IF resume:
+      current_iteration = last_iteration + 1
+      # Rebuild exploration state from TSV:
+      # - Mark covered dimensions from existing rows
+      # - Skip already-generated situations (dedup check)
+      # - Continue from Phase 3 with next unexplored dimension
+      RETURN resume_state
+
+  RETURN null  # no prior state, start fresh
+```
+
+**Persistence rule:** The TSV file is the checkpoint. Every iteration MUST append its row to `scenario-results.tsv` BEFORE proceeding to the next iteration. If the agent crashes between append and next iteration, zero work is lost.
+
 ## Phase 1: Seed — Capture & Analyze Scenario
 
 **STOP: Have you completed the Interactive Setup above?** If invoked without scenario/flags, you MUST complete the `AskUserQuestion` call above BEFORE entering this phase.

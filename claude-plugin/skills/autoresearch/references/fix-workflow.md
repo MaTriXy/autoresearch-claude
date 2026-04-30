@@ -62,6 +62,33 @@ If the user provides `--target`, `--guard`, `--scope`, or `--from-debug` flags, 
   └── Phase 8: Log & Repeat
 ```
 
+## Phase 0.5: Guard Pre-Validation
+
+**If a guard command is configured**, run it ONCE on the current (unmodified) codebase BEFORE starting any fix iterations:
+
+```bash
+guard_baseline_result = run(guard_command)
+
+IF guard_baseline_result FAILS:
+    WARN "⚠ Guard command fails on the CURRENT codebase (before any fixes applied)."
+    WARN "  Command: {guard_command}"
+    WARN "  Exit code: {exit_code}"
+    WARN "  This means every fix will trigger REWORK regardless of fix quality."
+
+    AskUserQuestion:
+      question: "The guard command already fails. How should I proceed?"
+      header: "Guard Pre-Validation Failed"
+      options:
+        - label: "Continue without guard"
+          description: "Fix errors without regression checking (guard disabled)"
+        - label: "Fix the guard first"
+          description: "I'll fix the guard command/infrastructure, then re-run /autoresearch:fix"
+        - label: "Cancel"
+          description: "Abort this fix session"
+```
+
+**Rationale:** Without pre-validation, a broken guard (e.g., typo, missing dependency, test infra failure) causes every fix iteration to enter REWORK, exhaust rework attempts, and add the item to `blocked.md` — making the entire session 100% blocked items regardless of fix quality.
+
 ## Phase 1: Detect — What's Broken?
 
 **STOP: Have you completed the Interactive Setup above?** If invoked without `--target`/`--guard`/`--scope` flags, you MUST complete the `AskUserQuestion` call above BEFORE entering this phase.
@@ -480,7 +507,33 @@ FUNCTION detectParallelizable(error_list):
   RETURN independent_groups  # can be fixed in parallel subagents
 ```
 
-**When to parallelize:** 5+ independent errors across different modules. Spawn parallel fix agents with `--scope` to isolate.
+**When to parallelize:** 5+ independent errors across different modules.
+
+**Parallel Git Isolation (MANDATORY):** Parallel fix agents MUST use separate git worktrees to prevent race conditions on the shared branch. Each agent operates in its own worktree with an isolated working directory and index.
+
+```bash
+# Before spawning parallel agents:
+FOR each independent_group:
+  BRANCH="fix/{slug}-group-{group_id}"
+  git worktree add "../fix-worktree-{group_id}" -b "$BRANCH"
+  # Spawn agent with:
+  #   --scope limited to group's files
+  #   CWD set to worktree directory
+
+# After all agents complete:
+FOR each worktree:
+  git checkout main_branch
+  git merge "fix/{slug}-group-{group_id}" --no-edit
+  git worktree remove "../fix-worktree-{group_id}"
+```
+
+**If git worktrees are unavailable** (e.g., repo doesn't support them, nested worktree):
+- Serialize fix sessions — run one agent at a time, each committing before the next starts
+- Log: "Parallel execution unavailable — running fix groups sequentially"
+
+**Lock coordination:** Each worktree creates its own `.git/autoresearch.lock` (see Session Isolation in autonomous-loop-protocol.md). The main branch lock prevents other non-parallel sessions from interfering.
+
+**Scope enforcement:** `--scope` is a HARD constraint for parallel agents — reject any file modification outside the assigned scope. This prevents two agents from modifying a shared dependency file simultaneously.
 
 ## Fix History Pattern Learning
 

@@ -660,6 +660,19 @@ estimated_tokens = files_in_scope * avg_tokens_per_file
 
 If halted mid-analysis: write partial results to `predict/{slug}/partial-findings.md` with `status: incomplete` in overview.md.
 
+**handoff.json MUST be written on ALL exit paths** — not just Phase 8 normal completion. This includes:
+
+| Exit Path | `status` Field | handoff.json Contents |
+|-----------|---------------|----------------------|
+| Normal completion (Phase 8) | `COMPLETE` | Full findings, hypotheses, scores |
+| Budget halt (hard limit hit) | `BUDGET_HALT` | Partial findings collected so far, `predict_score: 0`, `findings: [...]` (whatever is available) |
+| User interrupt / Ctrl+C | `PARTIAL` | Whatever findings exist at interruption, `predict_score: 0` |
+| Crash / unrecoverable error | `CRASHED` | Minimal: `status`, `scope`, `error_message`, `findings: []` |
+
+**Chain consumers MUST check `handoff.json.summary.status`** and handle non-COMPLETE statuses gracefully:
+- `BUDGET_HALT` / `PARTIAL` → warn user, proceed with available findings or ask to re-run with narrower scope
+- `CRASHED` → warn user, do not chain — suggest re-running predict
+
 ### Report Staleness
 
 At report generation, compare `commit_hash` in knowledge files vs current `git rev-parse HEAD`.
